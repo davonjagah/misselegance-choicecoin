@@ -2,6 +2,7 @@ var http = require('http');
 var fs = require('fs');
 var path = require('path');
 var querystring = require('querystring');
+var PORT=process.env.PORT|| 8125;
 
 require('dotenv').config();
 
@@ -287,7 +288,7 @@ switch (extname) {
     });
   }
 
-}).listen(8125);
+}).listen(PORT);
 console.log('Server running at http://127.0.0.1:8125/');
 
 function collectRequestData(request, callback) {
