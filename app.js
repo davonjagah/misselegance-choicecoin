@@ -2,7 +2,7 @@ var http = require('http');
 var fs = require('fs');
 var path = require('path');
 var querystring = require('querystring');
-var PORT=process.env.PORT|| 8125;
+var PORT=process.env.PORT;
 
 require('dotenv').config();
 
