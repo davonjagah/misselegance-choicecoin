@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Algorand Features and Smart Contracts GUI Demo with AlgoSigner",
   "main": "app.js",
+  "start":"app.js",
   "dependencies": {
     "algosdk": "^1.8.1",
     "dotenv": "^8.2.0",
@@ -11,6 +12,7 @@
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+
   },
   "repository": {
     "type": "git",
