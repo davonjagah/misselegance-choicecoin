@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create an Atomic Transfer - Algorand Features and Smart Contracts Demo</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.2/css/bulma.min.css"
+    integrity="sha512-byErQdWdTqREz6DLAA9pCnLbdoGGhXfU6gm1c8bkf7F51JVmUBlayGe2A31VpXWQP+eiJ3ilTAZHCR3vmMyybA=="
+    crossorigin="anonymous" />
+  <style>
+    .modal-content .box {
+      width: auto;
+    }
+
+    .modal-content {
+      width: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://algorand.com">
+        <img src="static/img/algorand_logo_mark_black.svg" style="height:100px;">
+      </a>
+
+      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="algoDemoNavbar">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+    <div id="algoDemoNavbar" class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item" href="index.html">
+          Introduction
+        </a>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            Transactions
+          </a>
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="algo-transfer.html">
+              ALGO Transfer
+            </a>
+            <a class="navbar-item" href="asa-transfer.html">
+              ASA Transfer
+            </a>
+            <a class="navbar-item" href="asset-creation.html">
+              Asset Creation
+            </a>
+            <a class="navbar-item" href="atomic-transfer.html">
+              Atomic Transfer
+            </a>
+          </div>
+        </div>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            Smart Contracts
+          </a>
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="limit-order.html">
+              Limit Order Contract
+            </a>
+            <a class="navbar-item" href="hash-time-lock.html">
+              Hash Time Lock Contract
+            </a>
+            <a class="navbar-item" href="split-contract.html">
+              Split Contract
+            </a>
+          </div>
+        </div>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            Tools
+          </a>
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item" target="_blank" href="https://testnet.algoexplorer.io/dispenser">
+              TestNet ALGO Faucet
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="navbar-end">
+        <div class="navbar-item">
+          <button class="button is-info" id="btnRefreshAccounts">Refresh Accounts</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <section class="section">
+    <div class="container">
+      <article id="successDialog" class="message is-success is-hidden">
+        <div class="message-header">
+          <p>Success</p>
+          <button class="delete" aria-label="delete"></button>
+        </div>
+        <div class="message-body">
+          <span id="successMessage"></span>
+        </div>
+      </article>
+      <article id="errorDialog" class="message is-danger is-hidden">
+        <div class="message-header">
+          <p>Error</p>
+          <button class="delete" aria-label="delete"></button>
+        </div>
+        <div class="message-body">
+          An error occurred: <span id="errorMessage"></span>
+        </div>
+      </article>
+
+      <div id="divAlgoSignerCheck" class="is-hidden">
+        <h1 class="title">AlgoSigner not installed!</h1>
+        <p class="subtitle">
+          You don't appear to have AlgoSigner installed! You can get it from the <a target="_blank"
+            href="https://chrome.google.com/webstore/detail/algosigner/kmmolakhbgdlpkjkcjkebenjheonagdm">Chrome Web
+            Store</a>.
+        </p>
+      </div>
+
+      <div id="divDemoBlock" class="is-hidden">
+        <h1 class="title">Create an Atomic Transfer</h1>
+
+        <p class="subtitle">
+          In this example, you should use two accounts to trade two different assets you have created.
+        </p>
+
+        <div class="columns">
+          <div class="column">
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">From</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <div class="select is-fullwidth">
+                      <select id="fromAccountOnLeftSide">
+                        <option value="-1">No accounts available</option>
+                      </select>
+                    </div>
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-wallet"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Asset to Transfer</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <div class="select is-fullwidth">
+                      <select id="assetOnLeftSide">
+                        <option>No assets available</option>
+                      </select>
+                    </div>
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-wallet"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Amount</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <input class="input" id="amountOnLeftSide">
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-coins"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">To</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <div class="select is-fullwidth">
+                      <select id="toAccountOnLeftSide">
+                        <option value="-1">No accounts available</option>
+                      </select>
+                    </div>
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-wallet"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="column">
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">From</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <div class="select is-fullwidth">
+                      <select id="fromAccountOnRightSide">
+                        <option value="-1">No accounts available</option>
+                      </select>
+                    </div>
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-wallet"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Asset to Transfer</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <div class="select is-fullwidth">
+                      <select id="assetOnRightSide">
+                        <option>No assets available</option>
+                      </select>
+                    </div>
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-wallet"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Amount</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <input class="input" id="amountOnRightSide">
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-coins"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">To</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <div class="select is-fullwidth">
+                      <select id="toAccountOnRightSide">
+                        <option value="-1">No accounts available</option>
+                      </select>
+                    </div>
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-wallet"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="button is-dark is-fullwidth" id="btnTradeAssets">Trade Assets</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="modal" id="processingModal">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+      <div class="box">
+        <span id="processingMessage">Processing, please wait...</span>
+        <progress class="progress is-small is-primary mt-1" max="100">15%</progress>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener("load", function () {
+      checkForAlgosigner(); // see algosignerutils.js
+    });
+
+    /**
+     * Fetches accounts belonging to the current AlgoSigner wallet
+     */
+    function fetchAccounts() {
+      showProcessingModal("Please wait...");
+
+      let fromAccountOnLeftSideSelect = document.getElementById('fromAccountOnLeftSide');
+      let fromAccountOnRightSideSelect = document.getElementById('fromAccountOnRightSide');
+      let toAccountOnLeftSideSelect = document.getElementById('toAccountOnLeftSide');
+      let toAccountOnRightSideSelect = document.getElementById('toAccountOnRightSide');
+      let assetOnLeftSideSelect = document.getElementById('assetOnLeftSide');
+      let assetOnRightSideSelect = document.getElementById('assetOnRightSide');
+
+      renderLoadingSelect(fromAccountOnLeftSideSelect);
+      renderLoadingSelect(fromAccountOnRightSideSelect);
+      renderLoadingSelect(toAccountOnLeftSideSelect);
+      renderLoadingSelect(toAccountOnRightSideSelect);
+      renderLoadingSelect(assetOnLeftSideSelect);
+      renderLoadingSelect(assetOnRightSideSelect);
+
+      AlgoSigner.connect()
+        // fetch accounts
+        .then(() => AlgoSigner.accounts({
+          ledger: 'TestNet'
+        }))
+        // populate account dropdowns
+        .then((accountsData) => {
+          renderAccountSelect(fromAccountOnLeftSideSelect, accountsData);
+          renderAccountSelect(fromAccountOnRightSideSelect, accountsData);
+          renderAccountSelect(toAccountOnLeftSideSelect, accountsData);
+          renderAccountSelect(toAccountOnRightSideSelect, accountsData);
+        })
+        // fetch assets of the currently selected account
+        .then(() => fetchAssets(fromAccountOnLeftSideSelect.value))
+        .then((assetsData) => renderAssetSelect(assetOnLeftSideSelect, assetsData))
+        // fetch assets of the currently selected account
+        .then(() => fetchAssets(fromAccountOnRightSideSelect.value))
+        .then((assetsData) => renderAssetSelect(assetOnRightSideSelect, assetsData))
+        .then(() => hideProcessingModal())
+        // we're finished
+        .catch((e) => {
+          handleClientError(e.message);
+          hideProcessingModal();
+        });
+    }
+
+    /**
+     * Fetches assets belonging to an account
+     * @param {string} account The Algorand account address
+     * @return {array} array of assets associated with the account
+     */
+    function fetchAssets(account) {
+      if (account != -1) {
+        showProcessingModal("Please wait...");
+
+        let assetsData = [];
+
+        return AlgoSigner.algod({
+            ledger: 'TestNet',
+            path: `/v2/accounts/${account}`
+          })
+          // iterate through each returned asset and get information
+          .then((accountData) => {
+            return accountData.assets.reduce(
+              (promise, asset) => promise.then(() =>
+                AlgoSigner.indexer({
+                  ledger: 'TestNet',
+                  path: `/v2/assets/${asset['asset-id']}`
+                })
+                .then((d) => assetsData.push(d))
+              ),
+              Promise.resolve());
+          })
+          .then(() => hideProcessingModal())
+          .then(() => assetsData)
+          .catch((e) => {
+            handleClientError(e.message);
+            hideProcessingModal();
+          });
+      } else {
+        return [];
+      }
+    }
+
+    /**
+     * Constructs, signs and sends an atomic transaction
+     */
+    function sendTradeAssetsTransaction() {
+      showProcessingModal("Sending transaction...");
+
+      let tx1 = {};
+      let tx2 = {};
+      let signedTx1 = {};
+      let signedTx2 = {};
+      let txGroup = [];
+
+      AlgoSigner.connect()
+        // fetch current parameters
+        .then(() => AlgoSigner.algod({
+          ledger: 'TestNet',
+          path: '/v2/transactions/params'
+        }))
+        // create transactions
+        .then((txParams) => {
+          let from = document.getElementById('fromAccountOnLeftSide').value;
+          let to = document.getElementById('toAccountOnLeftSide').value;
+          let assetId = Number(document.getElementById('assetOnLeftSide').value);
+          let amount = document.getElementById('amountOnLeftSide').value;
+
+          tx1 = {
+            assetIndex: assetId,
+            from: from,
+            amount: +amount,
+            to: to,
+            type: 'axfer',
+            fee: txParams['min-fee'],
+            firstRound: txParams['last-round'],
+            lastRound: txParams['last-round'] + 1000,
+            genesisID: txParams['genesis-id'],
+            genesisHash: txParams['genesis-hash'],
+            flatFee: true
+          };
+
+          from = document.getElementById('fromAccountOnRightSide').value;
+          to = document.getElementById('toAccountOnRightSide').value;
+          assetId = Number(document.getElementById('assetOnRightSide').value);
+          amount = document.getElementById('amountOnRightSide').value;
+
+          tx2 = {
+            assetIndex: assetId,
+            from: from,
+            amount: +amount,
+            to: to,
+            type: 'axfer',
+            fee: txParams['min-fee'],
+            firstRound: txParams['last-round'],
+            lastRound: txParams['last-round'] + 1000,
+            genesisID: txParams['genesis-id'],
+            genesisHash: txParams['genesis-hash'],
+            flatFee: true
+          };
+
+          // assigns a group id to the transaction set
+          return algosdk.assignGroupID([tx1, tx2]);
+        })
+        .then((txGroup) => {
+          // Modify the group fields in original transactions to be base64 encoded strings
+          tx1.group = txGroup[0].group.toString('base64');
+          tx2.group = txGroup[1].group.toString('base64');
+        })
+        // sign transaction 1
+        .then(() => AlgoSigner.sign(tx1))
+        .then((d) => signedTx1 = d)
+        // sign transaction 2
+        .then(() => AlgoSigner.sign(tx2))
+        .then((d) => signedTx2 = d)
+        .then(() => {
+          // Get the decoded binary Uint8Array values from the blobs
+          const decoded_1 = new Uint8Array(atob(signedTx1.blob).split("").map(x => x.charCodeAt(0)));
+          const decoded_2 = new Uint8Array(atob(signedTx2.blob).split("").map(x => x.charCodeAt(0)));
+
+          // Use their combined length to create a 3rd array
+          let combined_decoded_txns = new Uint8Array(decoded_1.byteLength + decoded_2.byteLength);
+
+          // Starting at the 0 position, fill in the binary for the first object
+          combined_decoded_txns.set(new Uint8Array(decoded_1), 0);
+          // Starting at the first object byte length, fill in the 2nd binary value
+          combined_decoded_txns.set(new Uint8Array(decoded_2), decoded_1.byteLength);
+
+          // Modify our combined array values back to an encoded 64bit string
+          const grouped_txns = btoa(String.fromCharCode.apply(null, combined_decoded_txns));
+
+          return AlgoSigner.send({
+            ledger: 'TestNet',
+            tx: grouped_txns
+          });
+        })
+        // wait for confirmation from the blockchain
+        .then((tx) => waitForAlgosignerConfirmation(tx)) // see algosignerutils.js
+        .then((tx) => {
+          // was successful
+          document.getElementById('successMessage').innerHTML = "The transaction with TxID " + tx.txId +
+            " was successfully sent. <a target=&quot;_blank&quot; href='https://testnet.algoexplorer.io/tx/" + tx
+            .txId +
+            "'>View on AlgoExplorer</a>";
+          document.getElementById('errorDialog').classList.add("is-hidden");
+          document.getElementById('successDialog').classList.remove("is-hidden");
+          hideProcessingModal();
+        })
+        .catch((e) => {
+          handleClientError(e.message);
+          hideProcessingModal();
+        });
+    }
+
+    document.getElementById('fromAccountOnLeftSide').addEventListener('change', function () {
+      let assetOnLeftSideSelect = document.getElementById('assetOnLeftSide');
+
+      renderLoadingSelect(assetOnLeftSideSelect);
+      fetchAssets(this.value)
+        .then((assetsData) => renderAssetSelect(assetOnLeftSideSelect, assetsData))
+    });
+
+    document.getElementById('fromAccountOnRightSide').addEventListener('change', function () {
+      let assetOnRightSideSelect = document.getElementById('assetOnRightSide');
+
+      renderLoadingSelect(assetOnRightSideSelect);
+      fetchAssets(this.value)
+        .then((assetsData) => renderAssetSelect(assetOnRightSideSelect, assetsData))
+    });
+
+    document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
+    document.getElementById('btnTradeAssets').addEventListener('click', sendTradeAssetsTransaction);
+  </script>
+  <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+  <script src="static/js/algosdk.min.js"></script>
+  <script src="static/js/site.js"></script>
+  <script src="static/js/algosignerutils.js"></script>
+</body>
+
+</html>

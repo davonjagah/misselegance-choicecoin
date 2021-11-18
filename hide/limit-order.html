@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Limit Order - Algorand Features and Smart Contracts Demo</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.2/css/bulma.min.css"
+    integrity="sha512-byErQdWdTqREz6DLAA9pCnLbdoGGhXfU6gm1c8bkf7F51JVmUBlayGe2A31VpXWQP+eiJ3ilTAZHCR3vmMyybA=="
+    crossorigin="anonymous" />
+  <script src="static/js/algosdk.min.js"></script>
+  <style>
+    .modal-content .box {
+      width: auto;
+    }
+
+    .modal-content {
+      width: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://algorand.com">
+        <img src="static/img/algorand_logo_mark_black.svg" style="height:100px;">
+      </a>
+
+      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="algoDemoNavbar">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+    <div id="algoDemoNavbar" class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item" href="index.html">
+          Introduction
+        </a>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            Transactions
+          </a>
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="algo-transfer.html">
+              ALGO Transfer
+            </a>
+            <a class="navbar-item" href="asa-transfer.html">
+              ASA Transfer
+            </a>
+            <a class="navbar-item" href="asset-creation.html">
+              Asset Creation
+            </a>
+            <a class="navbar-item" href="atomic-transfer.html">
+              Atomic Transfer
+            </a>
+          </div>
+        </div>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            Smart Contracts
+          </a>
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="limit-order.html">
+              Limit Order Contract
+            </a>
+            <a class="navbar-item" href="hash-time-lock.html">
+              Hash Time Lock Contract
+            </a>
+            <a class="navbar-item" href="split-contract.html">
+              Split Contract
+            </a>
+          </div>
+        </div>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            Tools
+          </a>
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item" target="_blank" href="https://testnet.algoexplorer.io/dispenser">
+              TestNet ALGO Faucet
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="navbar-end">
+        <div class="navbar-item">
+          <button class="button is-info" id="btnRefreshAccounts">Refresh Accounts</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <section class="section">
+    <div class="container">
+      <article id="successDialog" class="message is-success is-hidden">
+        <div class="message-header">
+          <p>Success</p>
+          <button class="delete" aria-label="delete"></button>
+        </div>
+        <div class="message-body">
+          <span id="successMessage"></span>
+        </div>
+      </article>
+      <article id="errorDialog" class="message is-danger is-hidden">
+        <div class="message-header">
+          <p>Error</p>
+          <button class="delete" aria-label="delete"></button>
+        </div>
+        <div class="message-body">
+          An error occurred: <span id="errorMessage"></span>
+        </div>
+      </article>
+
+      <div id="divAlgoSignerCheck" class="is-hidden">
+        <h1 class="title">AlgoSigner not installed!</h1>
+        <p class="subtitle">
+          You don't appear to have AlgoSigner installed! You can get it from the <a target="_blank"
+            href="https://chrome.google.com/webstore/detail/algosigner/kmmolakhbgdlpkjkcjkebenjheonagdm">Chrome Web
+            Store</a>.
+        </p>
+      </div>
+
+      <div id="divDemoBlock" class="is-hidden">
+        <h1 class="title">Limit Order - Bubblegum Demo</h1>
+
+        <p class="subtitle">
+          Pay 1 Algo, get 1 Bubblegum (BUBBLE). If you don't have any Algos to test with, use the TestNet Faucet in the
+          Tools menu to add Algos to your
+          TestNet account.
+        </p>
+
+        <div class="columns">
+          <div class="column">
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Payment Account</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <div class="select is-fullwidth">
+                      <select id="paymentAccountField">
+                        <option value="-1">No accounts available</option>
+                      </select>
+                    </div>
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-wallet"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="button is-dark is-fullwidth" id="btnSignAndSend">Sign and Send</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="modal" id="processingModal">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+      <div class="box">
+        <span id="processingMessage">Processing, please wait...</span>
+        <progress class="progress is-small is-primary mt-1" max="100">15%</progress>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener("load", function () {
+      checkForAlgosigner(); // see algosignerutils.js
+    });
+
+    /**
+     * Fetches accounts belonging to the current AlgoSigner wallet
+     */
+    function fetchAccounts() {
+      showProcessingModal("Please wait...");
+
+      let paymentAccountSelect = document.getElementById('paymentAccountField');
+
+      renderLoadingSelect(paymentAccountSelect);
+
+      AlgoSigner.connect()
+        // fetch accounts
+        .then(() => AlgoSigner.accounts({
+          ledger: 'TestNet'
+        }))
+        // populate account dropdowns
+        .then((accountsData) => {
+          renderAccountSelect(paymentAccountSelect, accountsData);
+          hideProcessingModal();
+        })
+        .catch((e) => {
+          handleClientError(e.message);
+          hideProcessingModal();
+        });
+    }
+
+    function executeBubblegumTransaction() {
+      let paymentAccount = document.getElementById('paymentAccountField').value;
+      let contractAddress = null;
+
+      showProcessingModal("Creating limit contract...");
+
+      fetch(`createBubblegumLimitContract?account=${paymentAccount}`)
+        .then((d) => d.json())
+        .then((d) => {
+          if (d["error"]) {
+            var e = {"message": d["error"].response.text};
+            throw e;
+          } else {
+            // was successful
+            contractAddress = d.contractAddress;
+            showProcessingModal("Sending opt-in transaction...");
+          }
+        })
+        // connect to AlgoSigner
+        .then(AlgoSigner.connect())
+        // fetch current parameters
+        .then(() => AlgoSigner.algod({
+          ledger: 'TestNet',
+          path: '/v2/transactions/params'
+        }))
+        // opt in to BUBBLE
+        .then((txParams) => AlgoSigner.sign({
+          assetIndex: 15431290,
+          from: paymentAccount,
+          amount: 0,
+          to: paymentAccount,
+          type: 'axfer',  // ASA Transfer (axfer)
+          fee: txParams['min-fee'],
+          firstRound: txParams['last-round'],
+          lastRound: txParams['last-round'] + 1000,
+          genesisID: txParams['genesis-id'],
+          genesisHash: txParams['genesis-hash'],
+          flatFee: true
+        }))
+        // send signed transaction
+        .then((signedTx) => AlgoSigner.send({
+          ledger: 'TestNet',
+          tx: signedTx.blob
+        }))
+        .then(() => showProcessingModal("Funding contract..."))
+        // fetch updated parameters
+        .then(() => AlgoSigner.algod({
+          ledger: 'TestNet',
+          path: '/v2/transactions/params'
+        }))
+        // pay for BUBBLE
+        .then((txParams) => AlgoSigner.sign({
+          from: paymentAccount,
+          to: contractAddress,
+          amount: +1000000,
+          note: 'Pay for BUBBLE',
+          type: 'pay',  // Payment (pay)
+          fee: txParams['min-fee'],
+          firstRound: txParams['last-round'],
+          lastRound: txParams['last-round'] + 1000,
+          genesisID: txParams['genesis-id'],
+          genesisHash: txParams['genesis-hash'],
+          flatFee: true
+        }))
+        .then((signedTx) => AlgoSigner.send({
+          ledger: 'TestNet',
+          tx: signedTx.blob
+        }))
+        // wait for confirmation from the blockchain
+        .then((tx) => waitForAlgosignerConfirmation(tx))
+        .then(() => showProcessingModal("Executing contract..."))
+        // after the contract funding is confirmed, execute the swap
+        .then(() => fetch(`executeBubblegumLimitContract?address=${contractAddress}`))
+        .then((d) => d.json())
+        .then((d) => {
+          if (d["error"]) {
+              throw d["error"];
+          } else {
+            // was successful
+            document.getElementById('successMessage').innerHTML = "The transaction with TxID " + d['txId'] +
+              " was successfully sent. <a target=&quot;_blank&quot; href='https://testnet.algoexplorer.io/tx/" + d[
+                'txId'] +
+              "'>View on AlgoExplorer</a>";
+            document.getElementById('successDialog').classList.remove("is-hidden");
+            document.getElementById('errorDialog').classList.add("is-hidden");
+          }
+
+          hideProcessingModal();
+        })
+        .catch((e) => {
+          handleClientError(e.message);
+          hideProcessingModal();
+        });
+    }
+
+    document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
+    document.getElementById('btnSignAndSend').addEventListener('click', executeBubblegumTransaction);
+  </script>
+  <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+  <script src="static/js/site.js"></script>
+  <script src="static/js/algosignerutils.js"></script>
+</body>
+
+</html>
