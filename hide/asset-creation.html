@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create an Asset - Algorand Features and Smart Contracts Demo</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.2/css/bulma.min.css"
+    integrity="sha512-byErQdWdTqREz6DLAA9pCnLbdoGGhXfU6gm1c8bkf7F51JVmUBlayGe2A31VpXWQP+eiJ3ilTAZHCR3vmMyybA=="
+    crossorigin="anonymous" />
+  <style>
+    .modal-content .box {
+      width: auto;
+    }
+
+    .modal-content {
+      width: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://algorand.com">
+        <img src="static/img/algorand_logo_mark_black.svg" style="height:100px;">
+      </a>
+
+      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="algoDemoNavbar">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+    <div id="algoDemoNavbar" class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item" href="index.html">
+          Introduction
+        </a>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            Transactions
+          </a>
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="algo-transfer.html">
+              ALGO Transfer
+            </a>
+            <a class="navbar-item" href="asa-transfer.html">
+              ASA Transfer
+            </a>
+            <a class="navbar-item" href="asset-creation.html">
+              Asset Creation
+            </a>
+            <a class="navbar-item" href="atomic-transfer.html">
+              Atomic Transfer
+            </a>
+          </div>
+        </div>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            Smart Contracts
+          </a>
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="limit-order.html">
+              Limit Order Contract
+            </a>
+            <a class="navbar-item" href="hash-time-lock.html">
+              Hash Time Lock Contract
+            </a>
+            <a class="navbar-item" href="split-contract.html">
+              Split Contract
+            </a>
+          </div>
+        </div>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            Tools
+          </a>
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item" target="_blank" href="https://testnet.algoexplorer.io/dispenser">
+              TestNet ALGO Faucet
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="navbar-end">
+        <div class="navbar-item">
+          <button class="button is-info" id="btnRefreshAccounts">Refresh Accounts</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <section class="section">
+    <div class="container">
+      <article id="successDialog" class="message is-success is-hidden">
+        <div class="message-header">
+          <p>Success</p>
+          <button class="delete" aria-label="delete"></button>
+        </div>
+        <div class="message-body">
+          <span id="successMessage"></span>
+        </div>
+      </article>
+      <article id="errorDialog" class="message is-danger is-hidden">
+        <div class="message-header">
+          <p>Error</p>
+          <button class="delete" aria-label="delete"></button>
+        </div>
+        <div class="message-body">
+          An error occurred: <span id="errorMessage"></span>
+        </div>
+      </article>
+
+      <div id="divAlgoSignerCheck" class="is-hidden">
+        <h1 class="title">AlgoSigner not installed!</h1>
+        <p class="subtitle">
+          You don't appear to have AlgoSigner installed! You can get it from the <a target="_blank"
+            href="https://chrome.google.com/webstore/detail/algosigner/kmmolakhbgdlpkjkcjkebenjheonagdm">Chrome Web
+            Store</a>.
+        </p>
+      </div>
+
+      <div id="divDemoBlock" class="is-hidden">
+        <h1 class="title">Create an Asset</h1>
+
+        <p class="subtitle">
+          Create an asset on the Algorand blockchain.
+        </p>
+
+        <div class="columns">
+          <div class="column">
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">From</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <div class="select is-fullwidth">
+                      <select id="fromField">
+                        <option value="-1">No accounts available</option>
+                      </select>
+                    </div>
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-wallet"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Name of Asset</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <input class="input" id="assetNameField">
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-signature"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Asset Unit Name</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <input class="input" id="assetUnitField">
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-signature"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Total Units</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <input class="input" id="assetTotalUnitsField">
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-coins"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Decimals</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <input class="input" id="assetNumberOfDecimalsField">
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-coins"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Note</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <input class="input" id="noteField" placeholder="(optional)">
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-sticky-note"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="button is-dark is-fullwidth" id="btnSignAndSend">Sign and Send</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="modal" id="processingModal">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+      <div class="box">
+        <span id="processingMessage">Processing, please wait...</span>
+        <progress class="progress is-small is-primary mt-1" max="100">15%</progress>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener("load", function () {
+      checkForAlgosigner(); // see algosignerutils.js
+    });
+
+    /**
+     * Fetches accounts belonging to the current AlgoSigner wallet
+     */
+     function fetchAccounts() {
+      showProcessingModal("Please wait...");
+      
+      let fromSelect = document.getElementById('fromField');
+
+      renderLoadingSelect(fromSelect);
+
+      AlgoSigner.connect()
+        // fetch accounts
+        .then(() => AlgoSigner.accounts({
+          ledger: 'TestNet'
+        }))
+        // populate account dropdowns
+        .then((accountsData) => {
+          renderAccountSelect(fromSelect, accountsData);
+          hideProcessingModal();
+        })
+        .catch((e) => {
+          handleClientError(e.message);
+          hideProcessingModal();
+        });
+    }
+
+    /**
+     * Signs a transaction using the current AlgoSigner wallet
+     */
+    function signAndSendTransaction() {
+      showProcessingModal("Sending transaction...");
+
+      let from = document.getElementById('fromField').value;
+      let assetName = document.getElementById('assetNameField').value;
+      let assetUnit = document.getElementById('assetUnitField').value;
+      let assetTotal = document.getElementById('assetTotalUnitsField').value;
+      let assetDecimals = document.getElementById('assetNumberOfDecimalsField').value;
+      let assetNote = document.getElementById('noteField').value;
+
+      AlgoSigner.connect()
+        // fetch current parameters
+        .then(() => AlgoSigner.algod({
+          ledger: 'TestNet',
+          path: '/v2/transactions/params'
+        }))
+        // sign new transaction
+        .then((txParams) => AlgoSigner.sign({
+          from: from,
+          assetName: assetName,
+          assetUnitName: assetUnit,
+          assetTotal: +assetTotal,
+          assetDecimals: +assetDecimals,
+          note: assetNote,
+          type: 'acfg', // ASA Configuration (acfg)
+          fee: txParams['min-fee'],
+          firstRound: txParams['last-round'],
+          lastRound: txParams['last-round'] + 1000,
+          genesisID: txParams['genesis-id'],
+          genesisHash: txParams['genesis-hash'],
+          flatFee: true
+        }))
+        // send signed transaction
+        .then((signedTx) => AlgoSigner.send({
+          ledger: 'TestNet',
+          tx: signedTx.blob
+        }))
+        // wait for confirmation from the blockchain
+        .then((tx) => waitForAlgosignerConfirmation(tx)) // see algosignerutils.js
+        .then((tx) => {
+          // was successful
+          document.getElementById('successMessage').innerHTML = "An asset named &quot;" + assetName +
+            "&quot; was created. <a target=&quot;_blank&quot; href='https://testnet.algoexplorer.io/tx/" + tx.txId +
+            "'>View on AlgoExplorer</a>"
+          document.getElementById('errorDialog').classList.add("is-hidden");
+          document.getElementById('successDialog').classList.remove("is-hidden");
+          hideProcessingModal();
+        })
+        .catch((e) => {
+          handleClientError(e.message);
+          hideProcessingModal();
+        });
+    }
+
+    document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
+    document.getElementById('btnSignAndSend').addEventListener('click', signAndSendTransaction);
+  </script>
+  <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+  <script src="static/js/site.js"></script>
+  <script src="static/js/algosignerutils.js"></script>
+</body>
+
+</html>
