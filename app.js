@@ -2,7 +2,7 @@ var http = require('http');
 var fs = require('fs');
 var path = require('path');
 var querystring = require('querystring');
-var PORT=process.env.PORT;
+var PORT=process.env.PORT || 8125;
 
 require('dotenv').config();
 
@@ -65,8 +65,65 @@ http.createServer(function (request, response) {
       break;
   }
 
-  if (filePath == './vote')
+  if (filePath == './vote-a')
   filePath = './static/asa-transfer.html';
+var extname = path.extname(filePath);
+var contentType = 'text/html';
+switch (extname) {
+  case '.js':
+    contentType = 'text/javascript';
+    break;
+  case '.css':
+    contentType = 'text/css';
+    break;
+  case '.json':
+    contentType = 'application/json';
+    break;
+  case '.png':
+    contentType = 'image/png';
+    break;
+  case '.jpg':
+    contentType = 'image/jpg';
+    break;
+  case '.svg':
+    contentType = 'image/svg+xml';
+    break;
+  case '.wav':
+    contentType = 'audio/wav';
+    break;
+}
+
+  if (filePath == './vote-w')
+  filePath = './static/vote-w.html';
+var extname = path.extname(filePath);
+var contentType = 'text/html';
+switch (extname) {
+  case '.js':
+    contentType = 'text/javascript';
+    break;
+  case '.css':
+    contentType = 'text/css';
+    break;
+  case '.json':
+    contentType = 'application/json';
+    break;
+  case '.png':
+    contentType = 'image/png';
+    break;
+  case '.jpg':
+    contentType = 'image/jpg';
+    break;
+  case '.svg':
+    contentType = 'image/svg+xml';
+    break;
+  case '.wav':
+    contentType = 'audio/wav';
+    break;
+}
+
+
+if (filePath == './choose-wallet')
+  filePath = './static/choose-wallet.html';
 var extname = path.extname(filePath);
 var contentType = 'text/html';
 switch (extname) {
